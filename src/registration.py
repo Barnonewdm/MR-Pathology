@@ -262,6 +262,9 @@ class demons_registration():
         sitk.WriteImage(out, 'itk_demons_out.nii.gz')
 
 class bspline_registration():
+    def __init__(self, DIR='./'):
+        self.DIR = DIR
+    
     def command_iteration_affine(self, method):
         if (method.GetOptimizerIteration() == 0):
             print(f"\tLevel: {method.GetCurrentLevel()}")
@@ -392,9 +395,9 @@ class bspline_registration():
         resampler.SetTransform(compositeTx)
     
         out = resampler.Execute(moving)
-        sitk.WriteImage(out, 'itk_bspline_out.nii.gz')
+        sitk.WriteImage(out, self.DIR + '/itk_bspline_out.nii.gz')
         
-        warper(MOVING='./Pathology_label.nii.gz', FIXED='./MR_label.nii.gz', Transform=Transform)
+        warper(MOVING= self.DIR + './Pathology_label.nii.gz', FIXED= self.DIR + './MR_label.nii.gz', SAVING = self.DIR + '/warped_pathology_label.nii.gz', Transform= Transform)
 
 
 def warper(MOVING, FIXED, Transform, SAVING = 'warped_label.nii.gz', Interpolation = sitk.sitkNearestNeighbor):
@@ -452,16 +455,18 @@ def Hausdorff_distance(FIXED='./MR_label.nii.gz', MOVED='./warped_label.nii.gz')
 if __name__ == '__main__':
     Saving_Dir='../Results/aa0051'
     if len(sys.argv) < 2:
-        preprocess(MR_dir='../MR/aaa0051/07-02-2000-PELVISPROSTATE-97855/4.000000-T2 AXIAL SM FOV-36207', Pathology_dir='../Pathology/aaa0051E', padding=(32,16))
-        #preprocess(padding=(6,6))
+        ##########################
         # We have several options for the registration model
         # 1. displacement_registration
         # 2. demons_registration
         # 3. bspline_registration
-        reg = bspline_registration()
-        reg.reg()
-        dice(FIXED= Saving_Dir + '/ITK-BSpline/MR_label.nii.gz', MOVED=Saving_Dir'/ANTs/warped_pathology_label.nii.gz')
-        Hausdorff_distance(FIXED= Saving_Dir + '/ITK-BSpline/MR_label.nii.gz', MOVED= Saving_Dir + '/ANTs/warped_pathology_label.nii.gz')
+        ##########################
+        preprocess(MR_dir='../MR/aaa0051/07-02-2000-PELVISPROSTATE-97855/4.000000-T2 AXIAL SM FOV-36207', Pathology_dir='../Pathology/aaa0051E', Results_Folder=Saving_Dir, padding=(32,16))
+        #preprocess(MR_dir='../MR/aaa0043/09-16-2000-PELVISPROSTATE-50407/4.000000-T2AXIALSMFOV-51544', Pathology_dir='../Pathology/aaa0043D', Results_Folder=Saving_Dir, padding=(6,6))
+        reg = bspline_registration(DIR=Saving_Dir)
+        reg.reg(MOVING= Saving_Dir + './Pathology_masked.nii.gz', FIXED= Saving_Dir + './MR_masked.nii.gz', Transform= Saving_Dir + './trans.hdf')
+        dice(FIXED= Saving_Dir + '/MR_label.nii.gz', MOVED=Saving_Dir + '/warped_pathology_label.nii.gz')
+        Hausdorff_distance(FIXED= Saving_Dir + '/MR_label.nii.gz', MOVED= Saving_Dir + '/warped_pathology_label.nii.gz')
         #postprocess('../Results/aa0051/ANTs')
     
     elif sys.argv[1] == 'pre':
