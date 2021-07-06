@@ -12,7 +12,7 @@ This code is used to register MR and patholgy images based on the SimpleITK pack
 | ID        | Dice (%)          | Hausdorff Distance  |
 | ------------- |:-------------:| -----:|
 | aaa0043D (itk-bspline) | 98.26      | 10.05 |
-| aaa0043D (itk-bspline, Mattes) | 97.27      | 8.06 |
+| aaa0043D (itk-bspline, Mattes) | 97.37      | 7.62 |
 | aaa0043D (ANTs)        | 98.79      |  3.61 |
 | aaa0051E (itk-bspline) | 91.52      | 30.61 |
 | aaa0051E (itk-bspline, Mattes) | 96.92      | 5.00 |
