@@ -1,6 +1,6 @@
 # MR-Pathology
 
-This code is used to register MR and patholgy images based on the SimpleITK package.
+This code is used to register MR and pathology images based on the SimpleITK package.
 
 ## Usage
 
