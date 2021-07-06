@@ -8,7 +8,7 @@ import SimpleITK as sitk
 from matplotlib import pyplot as plt
 import cv2
 import sys
-from math import pi
+import os
 
 
 def rgb2gray(rgb):
@@ -67,12 +67,14 @@ def preprocess(MR_dir='../MR/aaa0043/09-16-2000-PELVISPROSTATE-50407/4.000000-T2
     
     mr_masked = np.uint8(mr_masked.astype(np.float)/np.max(mr_masked)*255)
     mr_masked = mr_masked[index[0].min()-5 : index[0].max()+10, index[1].min()-5 : index[1].max()+10]
+    #mr_masked = mr_masked[index[0].min() : index[0].max(), index[1].min() : index[1].max()]
     mr_masked = pad_and_resize(mr_masked,padding=padding)
     mr_masked = sitk.GetImageFromArray(mr_masked)
     sitk.WriteImage(mr_masked, Results_Folder + './MR_masked.nii.gz')
     
     img = np.uint8(mr_label_img_data_slice.astype(np.float)/np.max(mr_label_img_data_slice)*255)
     img = img[index[0].min()-5 : index[0].max()+10, index[1].min()-5 : index[1].max()+10]
+    #img = img[index[0].min() : index[0].max(), index[1].min() : index[1].max()]
     img = pad_and_resize(img, padding=padding)
     img = sitk.GetImageFromArray(img)
     img.CopyInformation(mr_masked)
@@ -313,8 +315,8 @@ class bspline_registration():
         
         R = sitk.ImageRegistrationMethod()
         
-        R.SetShrinkFactorsPerLevel([3, 2, 1])
-        R.SetSmoothingSigmasPerLevel([2, 1, 1])#2,1,1
+        R.SetShrinkFactorsPerLevel([4, 2, 1])#3,2,1
+        R.SetSmoothingSigmasPerLevel([4, 2, 1])#2,1,1
         
         R.SetMetricAsJointHistogramMutualInformation()#20
         R.MetricUseFixedImageGradientFilterOff()
@@ -336,7 +338,7 @@ class bspline_registration():
         
         return outTx1
         
-    def reg(self, MOVING='./Pathology_masked.nii.gz', FIXED='./MR_masked.nii.gz', Transform='./trans.hdf'):
+    def reg(self, metrics='Mattes', MOVING='./Pathology_masked.nii.gz', FIXED='./MR_masked.nii.gz', Transform='./trans.hdf'):
     
         fixed = sitk.ReadImage(FIXED, sitk.sitkFloat32)
         
@@ -351,12 +353,16 @@ class bspline_registration():
         
         R = sitk.ImageRegistrationMethod()
         
-        R.SetMetricAsJointHistogramMutualInformation()
+        if metrics == 'Mattes':
+            R.SetMetricAsMattesMutualInformation()
+        else:
+            R.SetMetricAsJointHistogramMutualInformation()
         
         R.SetOptimizerAsGradientDescentLineSearch(5.0, #5.0
                                                   100, #100
                                                   convergenceMinimumValue=1e-4,
-                                                  convergenceWindowSize=5)#5
+                                                  convergenceWindowSize=5)
+        
         
         R.SetInterpolator(sitk.sitkLinear)
         
@@ -453,7 +459,12 @@ def Hausdorff_distance(FIXED='./MR_label.nii.gz', MOVED='./warped_label.nii.gz')
           hausdorff_distance_filter.GetHausdorffDistance())
             
 if __name__ == '__main__':
-    Saving_Dir='../Results/aa0051'
+    Saving_Dir='../Results/aa0051/'
+    metrics = 'Mattes' # Mattes or Joint
+    if os.path.isdir(Saving_Dir):
+        print('True')
+    else:
+        os.mkdir(Saving_Dir)
     if len(sys.argv) < 2:
         ##########################
         # We have several options for the registration model
@@ -461,10 +472,10 @@ if __name__ == '__main__':
         # 2. demons_registration
         # 3. bspline_registration
         ##########################
-        preprocess(MR_dir='../MR/aaa0051/07-02-2000-PELVISPROSTATE-97855/4.000000-T2 AXIAL SM FOV-36207', Pathology_dir='../Pathology/aaa0051E', Results_Folder=Saving_Dir, padding=(32,16))
-        #preprocess(MR_dir='../MR/aaa0043/09-16-2000-PELVISPROSTATE-50407/4.000000-T2AXIALSMFOV-51544', Pathology_dir='../Pathology/aaa0043D', Results_Folder=Saving_Dir, padding=(6,6))
+        #preprocess(MR_dir='../MR/aaa0051/07-02-2000-PELVISPROSTATE-97855/4.000000-T2 AXIAL SM FOV-36207', Pathology_dir='../Pathology/aaa0051E', Results_Folder=Saving_Dir, padding=(32,16))
+        preprocess(MR_dir='../MR/aaa0043/09-16-2000-PELVISPROSTATE-50407/4.000000-T2AXIALSMFOV-51544', Pathology_dir='../Pathology/aaa0043D', Results_Folder=Saving_Dir, padding=(6,6))
         reg = bspline_registration(DIR=Saving_Dir)
-        reg.reg(MOVING= Saving_Dir + './Pathology_masked.nii.gz', FIXED= Saving_Dir + './MR_masked.nii.gz', Transform= Saving_Dir + './trans.hdf')
+        reg.reg(metrics=metrics, MOVING= Saving_Dir + '/Pathology_masked.nii.gz', FIXED= Saving_Dir + '/MR_masked.nii.gz', Transform= Saving_Dir + './trans.hdf')
         dice(FIXED= Saving_Dir + '/MR_label.nii.gz', MOVED=Saving_Dir + '/warped_pathology_label.nii.gz')
         Hausdorff_distance(FIXED= Saving_Dir + '/MR_label.nii.gz', MOVED= Saving_Dir + '/warped_pathology_label.nii.gz')
         #postprocess('../Results/aa0051/ANTs')
