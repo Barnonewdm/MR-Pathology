@@ -5,7 +5,7 @@ This code is used to register MR and pathology images based on the SimpleITK pac
 ## Usage
 
 * Run the registration, please: `python ./src/registration.py`
-* Also, ANTs [scirpt](https://github.com/Barnonewdm/MR-Pathology/blob/main/src/ANTs.sh) is also supplied. Please install the [ANTs](https://github.com/ANTsX/ANTs) before using the script.
+* Also, ANTs [scirpt](https://github.com/Barnonewdm/MR-Pathology/blob/main/src/ANTs.sh) is supplied. Please install the [ANTs](https://github.com/ANTsX/ANTs) before using the script.
 
 ## Results
 
