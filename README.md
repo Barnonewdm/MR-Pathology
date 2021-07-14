@@ -2,6 +2,9 @@
 
 This code is used to register MR and pathology images based on the SimpleITK package.
 
+## Dataset
+Please download the MR and pathology data from [Cancer Imaging Archive](https://wiki.cancerimagingarchive.net/display/Public/Prostate+Fused-MRI-Pathology).
+
 ## Usage
 
 * Run the registration, please: `python ./src/registration.py`
